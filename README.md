@@ -6,10 +6,8 @@ quizzes you on campbell bio test bank questions
 - save progress and stuff
 - maybe can expand to chemistry problems or other textbooks and tests like a ripoff AOPS but in terminal
 
-# usage
+# Usage
 `git clone https://github.com/dglgit/campbell-quizzer && cd campbell-quizzer`
-
-obtain campbell test bank online and convert to txt file and put into the directory
 
 run
 `python quizzer.py` 
