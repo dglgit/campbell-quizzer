@@ -1,4 +1,5 @@
 import random
+import json
 def isQuestionStart(line):
     nums='0123456789'
     if line[0] not in nums:
@@ -62,7 +63,7 @@ def askQuestion(q, tries=3):
     print(f'the correct answer was: {answer}')
     return tried
 def simpleQuiz(qs):
-    ch=int(input('choose chapter: '))
+    ch=input('choose chapter: ')
     doRandom=input('random?[y/n] ')=='y'
     qb=qs[ch]
     idxs=list(range(len(qb)))
@@ -85,9 +86,12 @@ def simpleQuiz(qs):
     print(f'{correct}/{total} questions correctly answered, {skipped} skipped')
 
 if __name__=='__main__':
-    with open('testBank.txt','r') as f:
-        txt=list(f)
-    a=getChapterQuestions(txt, list(range(1, 57)))
-    print(len(a))
+    #with open('testBank.txt','r') as f:
+    #    txt=list(f)
+    #a=getChapterQuestions(txt, list(range(1, 57)))
+    #with open('testBank.json','r') as j:
+        #json.dump(a,j) #for some reason when you dump to json the keys get turned to strings
+    with open('testBank.json','r') as j:
+        a=json.load(j)
     print(list(a))
     simpleQuiz(a)
