@@ -1,5 +1,9 @@
 import random
 import json
+import datetime
+import os
+savePrefix='./saves/'
+
 def isQuestionStart(line):
     nums='0123456789'
     if line[0] not in nums:
@@ -13,6 +17,7 @@ def getProblem(s,j):
                 if s[k].startswith('Answer'):
                     break
             return (question,''.join( s[l:k]).strip(),s[k][-2],k)
+
 
 def getChapterQuestions(s:list,chapterNum):
     problems={}
@@ -39,6 +44,15 @@ def getChapterQuestions(s:list,chapterNum):
             i+=1
     return problems
 def printQuestion(q):
+    """
+    enum{
+        stop: -1
+        save: -2
+        reset: -3
+        Skip: None
+        default: tried(int)
+    }
+    """
     print(q[0])
     print(q[1])
     print(q[2])
@@ -51,6 +65,8 @@ def askQuestion(q, tries=3):
         pred=input('answer: ')
         if pred=='stop':
             return -1
+        if pred=='save':
+            return -2
         if pred=='skip':
             print('skipping question')
             return None
@@ -62,28 +78,74 @@ def askQuestion(q, tries=3):
             tried+=1
     print(f'the correct answer was: {answer}')
     return tried
+
 def simpleQuiz(qs):
     ch=input('choose chapter: ')
-    doRandom=input('random?[y/n] ')=='y'
-    qb=qs[ch]
-    idxs=list(range(len(qb)))
-    tries=input("tries per question(default 1): ")
-    tries=1 if tries=='' else int(tries)
-    if doRandom:
-        random.shuffle(idxs)
+    chapterSaves=[]
+    for f in os.listdir(savePrefix):
+        if ch in f.split('_')[0]:
+            chapterSaves.append(savePrefix+f)
+    if len(chapterSaves)==0:    
+        doRandom=input('random?[y/N] ')=='y'
+        qb=qs[ch]
+        idxs=list(range(len(qb)))
+        questionHistory={}
+        tries=input("tries per question(default 1): ")
+        tries=1 if tries=='' else int(tries)
+        if doRandom:
+            random.shuffle(idxs)
+    else:
+        print("chapter save file(s) found, please choose one")
+        print(''.join([f'{i}: {chapterSaves[i]} ' for i in range(len(chapterSaves))]))
+        realCh=input("save (press enter to make new file): ")
+        if not realCh:#if user doesnt want to load from file
+            doRandom=input('random?[y/N] ')=='y'
+            qb=qs[ch]
+            idxs=list(range(len(qb)))
+            questionHistory={}
+            tries=input("tries per question(default 1): ")
+            tries=1 if tries=='' else int(tries)
+            if doRandom:
+                random.shuffle(idxs)
+        else:
+            with open(chapterSaves[int(realCh)], 'r') as ff:
+                questionHistory=json.load(ff)
+                qb=qs[ch]
+                idxs=[int(i) for i in set(questionHistory.keys())^set([str(i) for i in range(len(qb))])]
+                doRandom=input('random?[y/N] ')=='y'
+                tries=input("tries per question(default 1): ")
+                tries=1 if tries=='' else int(tries)
+                if doRandom:
+                    random.shuffle(idxs)
+                else:
+                    idxs=sorted(idxs)
     correct=0
     total=0
     skipped=0
+    avgTries=0
     for q in idxs:
-        result=askQuestion(qb[q],tries)
-        if result ==-1:
+        r=askQuestion(qb[q],tries)
+        if r==-2:
+            fname=input("save session name(press enter to autogenerate file or 'same' to use the current file): ")
+            if not fname:
+                fname=savePrefix+f'save{ch}_'+datetime.datetime.now().strftime("%m-%d-%y")
+            elif fname=='same':
+                fname=chapterSaves[int(realCh)]
+            
+            with open(fname, 'w') as f:
+                json.dump(questionHistory,f)
+        if r==-1:
             break
-        if result is None:
+        if r is None:
             skipped+=1
+            questionHistory[int(q)]=-1
+            continue
         else:
+            avgTries+=r
+            correct+=r<tries
+            questionHistory[int(q)]=r<tries
             total+=1
-            correct+=result<tries
-    print(f'{correct}/{total} questions correctly answered, {skipped} skipped')
+    print(f'{correct}/{total} questions correctly answered, {skipped} skipped, average amount of tries: {avgTries/total}')
 
 if __name__=='__main__':
     #with open('testBank.txt','r') as f:
