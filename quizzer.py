@@ -1,3 +1,4 @@
+#!/Users/ji_tzuoh_lin/miniconda3/bin/python
 import random
 import json
 import datetime
@@ -58,12 +59,13 @@ def printQuestion(q):
     print(q[2])
 def askQuestion(q, tries=3):
     question, choices,answer=q
+    #print(f'[{qnum}/{total}] ', end='')
     print(question)
     print(choices)
     tried=0
     while tried<tries:
         pred=input('answer: ')
-        if pred=='stop':
+        if pred=='stop' or pred=='exit':
             return -1
         if pred=='save':
             return -2
@@ -72,11 +74,13 @@ def askQuestion(q, tries=3):
             return None
         if pred.lower()==answer.lower():
             print("correct")
+            print()
             return tried
         else:
             print('incorrect')
             tried+=1
     print(f'the correct answer was: {answer}')
+    print()
     return tried
 
 def simpleQuiz(qs):
@@ -123,17 +127,19 @@ def simpleQuiz(qs):
     total=0
     skipped=0
     avgTries=0
+
     for q in idxs:
         r=askQuestion(qb[q],tries)
         if r==-2:
             fname=input("save session name(press enter to autogenerate file or 'same' to use the current file): ")
             if not fname:
-                fname=savePrefix+f'save{ch}_'+datetime.datetime.now().strftime("%m-%d-%y")
+                fname=savePrefix+f'save{ch}_'+datetime.datetime.now().strftime("%m-%d-%y_%H:%M:%S")
             elif fname=='same':
                 fname=chapterSaves[int(realCh)]
             
             with open(fname, 'w') as f:
                 json.dump(questionHistory,f)
+            break
         if r==-1:
             break
         if r is None:
